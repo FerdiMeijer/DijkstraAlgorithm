@@ -16,5 +16,10 @@ namespace DijkstraAlgorithm
                 return default(T);
             }
         }
+
+        public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
+        {
+            return enumerable?.Any() != true;
+        }
     }
 }

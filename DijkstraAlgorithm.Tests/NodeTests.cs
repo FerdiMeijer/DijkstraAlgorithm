@@ -26,8 +26,8 @@ namespace DijkstraAlgorithm.Tests
             var nodeB = new Node("B");
             nodeA.AddConnection(nodeB, 10);
 
-            nodeA.Connections.Count().Should().Be(1);
-            nodeA.Connections.All(c => c.Node == nodeB).Should().BeTrue();
+            nodeA.ConnectingNodes.Count().Should().Be(1);
+            nodeA.ConnectingNodes.All(c => c.Node == nodeB).Should().BeTrue();
         }
     }
 }

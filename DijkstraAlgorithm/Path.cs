@@ -4,13 +4,17 @@ using System.Linq;
 
 namespace DijkstraAlgorithm
 {
-    public class Route
+    /// <summary>
+    /// A list of connections from a start node to the end node
+    /// </summary>
+    public class Path
     {
         public Node EndNode { get; }
 
         private List<Connection> _connections;
+        private bool _isRelaxed;
 
-        public Route(Node startNode, Connection endpoint)
+        public Path(Node startNode, Connection endpoint)
         {
             EndNode = endpoint.Node;
             StartNode = startNode ?? throw new System.ArgumentNullException(nameof(startNode));
@@ -18,27 +22,36 @@ namespace DijkstraAlgorithm
             _connections = new List<Connection> { endpoint };
         }
 
-        public IEnumerable<Connection> Connections 
+        public IEnumerable<Connection> Connections
         {
             get
-            { 
+            {
                 return _connections;
             }
         }
 
-        public void ApplyNewRoute(Route intermediateRoute, Connection toEndpoint)
+        public void Relax(Path pathToEndNode, Connection toEndpoint)
         {
             if (toEndpoint.Node != EndNode)
             {
                 throw new ArgumentException();
             }
 
-            _connections = intermediateRoute.Connections
+            _connections = pathToEndNode.Connections
                 .Concat(new List<Connection> { toEndpoint })
                 .ToList();
         }
+        public void Relax()
+        {
+            if(_isRelaxed)
+            {
+                throw new Exception("Path already relaxed!");
+            }
 
-        public bool EndNodeRelaxed { get; set; }
+            _isRelaxed = true;
+        }
+
+        public bool IsRelaxed => _isRelaxed;
         public Node StartNode { get; }
 
         public double Cost
