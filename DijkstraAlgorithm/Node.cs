@@ -1,17 +1,12 @@
 ﻿namespace DijkstraAlgorithm;
 
-public class Node
+public class Node(string name)
 {
-    private readonly List<Edge> _connectedEdges = [];
+    private readonly List<Edge> _edges = [];
 
-    public Node(string name)
-    {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-    }
+    public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
 
-    public string Name { get; }
-
-    public IEnumerable<Edge> ConnectedEdges => _connectedEdges;
+    public IEnumerable<Edge> Edges => _edges;
 
     /// <summary>
     /// Get the cost of the connection from this node to the other node.
@@ -25,7 +20,7 @@ public class Node
             return 0;
         }
 
-        return ConnectedEdges.FirstOrDefault(c => c.Node == node)?.Cost ?? double.PositiveInfinity;
+        return _edges.FirstOrDefault(c => c.Node == node)?.Cost ?? double.PositiveInfinity;
     }
 
     public void AddConnection(Node node, double cost)
@@ -35,7 +30,7 @@ public class Node
             throw new ArgumentException("Node should not be connected to self.");
         }
 
-        _connectedEdges.Add(new Edge(node, cost));
+        _edges.Add(new Edge(node, cost));
     }
 
     public override string ToString() => $"{Name}";

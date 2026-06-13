@@ -3,12 +3,12 @@
 /// <summary>
 /// A list of edges from a start node to the end node
 /// </summary>
-public class Path(Node startNode, Edge endpoint)
+public class Path(Node startNode, Edge end)
 {
-    private List<Edge> _edges = [endpoint];
+    private List<Edge> _edges = [end];
     private bool _isRelaxed;
 
-    public Node EndNode { get; } = endpoint.Node;
+    public Node EndNode { get; } = end.Node;
 
     public Node StartNode { get; } =
         startNode ?? throw new ArgumentNullException(nameof(startNode));
@@ -19,14 +19,19 @@ public class Path(Node startNode, Edge endpoint)
 
     public double Cost => _edges.CalculateCost();
 
-    public void Relax(Path pathToEndNode, Edge toEndpoint)
+    public void Update(Path path, Edge end)
     {
-        if (toEndpoint.Node != EndNode)
+        if (!path.IsRelaxed)
+        {
+            throw new ArgumentException("Path must be relaxed before updating.");
+        }
+
+        if (end.Node != EndNode)
         {
             throw new ArgumentException("Endpoint node must match the path's end node.");
         }
 
-        _edges = [.. pathToEndNode.Edges, toEndpoint];
+        _edges = [.. path.Edges, end];
     }
 
     public void Relax()

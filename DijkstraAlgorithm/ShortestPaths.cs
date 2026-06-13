@@ -2,9 +2,15 @@
 
 public class ShortestPaths
 {
+    private readonly List<Path> _paths = [];
+
     public int Iterations { get; set; }
 
-    public required Node StartNode { get; set; }
+    public required Node StartNode { get; init; }
 
-    public required List<Path> Paths { get; set; }
+    public required IEnumerable<Path> Paths
+    {
+        get => _paths;
+        init => _paths = value.ToList();
+    }
 }

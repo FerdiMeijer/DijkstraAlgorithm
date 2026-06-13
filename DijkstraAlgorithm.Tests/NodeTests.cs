@@ -23,7 +23,7 @@ public class NodeTests
         var nodeB = new Node("B");
         nodeA.AddConnection(nodeB, 10);
 
-        nodeA.ConnectedEdges.Count().ShouldBe(1);
-        nodeA.ConnectedEdges.All(c => c.Node == nodeB).ShouldBeTrue();
+        nodeA.Edges.Count().ShouldBe(1);
+        nodeA.Edges.All(c => c.Node == nodeB).ShouldBeTrue();
     }
 }
