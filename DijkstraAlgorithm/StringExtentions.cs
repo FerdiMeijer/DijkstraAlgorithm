@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿namespace DijkstraAlgorithm;
 
-namespace DijkstraAlgorithm
+public static class StringExtensions
 {
-    public static class StringExtentions
+    public static string ToCsv<T>(this IEnumerable<T> list, string separator = ", ")
     {
-        public static string ToCsv<T>(this IEnumerable<T> list, string separator = ", ")
+        return list?.Aggregate(string.Empty, (a, b) =>
         {
-            return list?.Aggregate(string.Empty, (a, b) =>
+            if (string.IsNullOrEmpty(a))
             {
-                if (string.IsNullOrEmpty(a))
-                {
-                    return b.ToString();
-                }
+                return b?.ToString() ?? string.Empty;
+            }
 
-                return string.Concat(a, separator, b);
-            });
-        }
+            return string.Concat(a, separator, b);
+        }) ?? string.Empty;
     }
 }

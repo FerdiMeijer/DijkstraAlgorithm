@@ -1,33 +1,29 @@
+namespace DijkstraAlgorithm.Tests;
+
 using NUnit.Framework;
-using DijkstraAlgorithm;
-using System;
-using FluentAssertions;
-using System.Linq;
+using Shouldly;
 
-namespace DijkstraAlgorithm.Tests
+public class NodeTests
 {
-    public class NodeTests
+    [Test]
+    public void AddConnectionShouldBeAllowedToAddSelf()
     {
-        [Test]
-        public void AddConnectionShouldBeAllowedToAddSelf()
+        var nodeA = new Node("A");
+
+        Assert.Throws<ArgumentException>(() =>
         {
-            var nodeA = new Node("A");
+            nodeA.AddConnection(nodeA, 10);
+        });
+    }
 
-            Assert.Throws<ArgumentException>(() =>
-            {
-                nodeA.AddConnection(nodeA, 10);
-            });
-        }
+    [Test]
+    public void AddConnectionShouldBeAllowedToOtherNode()
+    {
+        var nodeA = new Node("A");
+        var nodeB = new Node("B");
+        nodeA.AddConnection(nodeB, 10);
 
-        [Test]
-        public void AddConnectionShouldBeAllowedToOtherNode()
-        {
-            var nodeA = new Node("A");
-            var nodeB = new Node("B");
-            nodeA.AddConnection(nodeB, 10);
-
-            nodeA.ConnectingNodes.Count().Should().Be(1);
-            nodeA.ConnectingNodes.All(c => c.Node == nodeB).Should().BeTrue();
-        }
+        nodeA.ConnectedEdges.Count().ShouldBe(1);
+        nodeA.ConnectedEdges.All(c => c.Node == nodeB).ShouldBeTrue();
     }
 }

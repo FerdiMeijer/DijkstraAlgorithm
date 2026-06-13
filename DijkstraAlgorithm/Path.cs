@@ -1,71 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace DijkstraAlgorithm;
 
-namespace DijkstraAlgorithm
+/// <summary>
+/// A list of edges from a start node to the end node
+/// </summary>
+public class Path(Node startNode, Edge endpoint)
 {
-    /// <summary>
-    /// A list of connections from a start node to the end node
-    /// </summary>
-    public class Path
+    private List<Edge> _edges = [endpoint];
+    private bool _isRelaxed;
+
+    public Node EndNode { get; } = endpoint.Node;
+
+    public Node StartNode { get; } =
+        startNode ?? throw new ArgumentNullException(nameof(startNode));
+
+    public IEnumerable<Edge> Edges => _edges;
+
+    public bool IsRelaxed => _isRelaxed;
+
+    public double Cost => _edges.CalculateCost();
+
+    public void Relax(Path pathToEndNode, Edge toEndpoint)
     {
-        public Node EndNode { get; }
-
-        private List<Connection> _connections;
-        private bool _isRelaxed;
-
-        public Path(Node startNode, Connection endpoint)
+        if (toEndpoint.Node != EndNode)
         {
-            EndNode = endpoint.Node;
-            StartNode = startNode ?? throw new System.ArgumentNullException(nameof(startNode));
-
-            _connections = new List<Connection> { endpoint };
+            throw new ArgumentException("Endpoint node must match the path's end node.");
         }
 
-        public IEnumerable<Connection> Connections
+        _edges = [.. pathToEndNode.Edges, toEndpoint];
+    }
+
+    public void Relax()
+    {
+        if (_isRelaxed)
         {
-            get
-            {
-                return _connections;
-            }
+            throw new InvalidOperationException("Path already relaxed!");
         }
 
-        public void Relax(Path pathToEndNode, Connection toEndpoint)
-        {
-            if (toEndpoint.Node != EndNode)
-            {
-                throw new ArgumentException();
-            }
+        _isRelaxed = true;
+    }
 
-            _connections = pathToEndNode.Connections
-                .Concat(new List<Connection> { toEndpoint })
-                .ToList();
-        }
-        public void Relax()
-        {
-            if(_isRelaxed)
-            {
-                throw new Exception("Path already relaxed!");
-            }
-
-            _isRelaxed = true;
-        }
-
-        public bool IsRelaxed => _isRelaxed;
-        public Node StartNode { get; }
-
-        public double Cost
-        {
-            get
-            {
-                return _connections.CalculateCost();
-            }
-        }
-
-        public override string ToString()
-        {
-            var cost = Cost == double.PositiveInfinity ? "∞" : Cost.ToString();
-            return $"{StartNode.Name}=>{_connections.Select(c => $"{c.Node.Name}:{c.Cost}").ToCsv("=>")} ∑: {cost}";
-        }
+    public override string ToString()
+    {
+        var cost = Cost == double.PositiveInfinity ? "∞" : Cost.ToString();
+        return $"{StartNode.Name}=>{_edges.Select(c => $"{c.Node.Name}:{c.Cost}").ToCsv("=>")} ∑: {cost}";
     }
 }

@@ -1,56 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace DijkstraAlgorithm;
 
-namespace DijkstraAlgorithm
+public class Node
 {
-    public class Node
+    private readonly List<Edge> _connectedEdges = [];
+
+    public Node(string name)
     {
-        private List<Connection> _connectingNodes;
-
-        public Node(string name)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            _connectingNodes = new List<Connection>();
-        }
-
-        /// <summary>
-        /// If there is no direct connection from this node to the other node
-        /// the cost will be set to infinite.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        public double GetConnectionCost(Node node)
-        {
-            if(this == node)
-            {
-                return 0;
-            }
-
-            return this.ConnectingNodes
-                .FirstOrDefault(c => c.Node == node)?.Cost ?? Double.PositiveInfinity;
-        }
-
-        public override string ToString()
-        {
-            return $"{Name}";
-        }
-
-        public string Name { get; }
-
-        public void AddConnection(Node node, double cost)
-        {
-            if (node == this)
-            {
-                throw new ArgumentException("Node should not be connected to self.");
-            }
-
-            _connectingNodes.Add(new Connection(node, cost));
-        }
-
-        public IEnumerable<Connection> ConnectingNodes
-        {
-            get { return _connectingNodes; }
-        }
+        Name = name ?? throw new ArgumentNullException(nameof(name));
     }
+
+    public string Name { get; }
+
+    public IEnumerable<Edge> ConnectedEdges => _connectedEdges;
+
+    /// <summary>
+    /// Get the cost of the connection from this node to the other node.
+    /// If there is no direct connection from this node to the other node
+    /// the cost will be set to infinite.
+    /// </summary>
+    public double GetConnectionCost(Node node)
+    {
+        if (this == node)
+        {
+            return 0;
+        }
+
+        return ConnectedEdges.FirstOrDefault(c => c.Node == node)?.Cost ?? double.PositiveInfinity;
+    }
+
+    public void AddConnection(Node node, double cost)
+    {
+        if (node == this)
+        {
+            throw new ArgumentException("Node should not be connected to self.");
+        }
+
+        _connectedEdges.Add(new Edge(node, cost));
+    }
+
+    public override string ToString() => $"{Name}";
 }

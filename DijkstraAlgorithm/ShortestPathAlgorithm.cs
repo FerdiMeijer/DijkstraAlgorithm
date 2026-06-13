@@ -1,86 +1,125 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Extensions.Logging;
 
-namespace DijkstraAlgorithm
+namespace DijkstraAlgorithm;
+
+public class ShortestPathAlgorithm
 {
-    public class ShortestPathAlgorithm
+    private readonly IEnumerable<Node> _nodes;
+    private readonly ILogger<ShortestPathAlgorithm> _logger;
+    private ShortestPaths _result = null!;
+
+    public ShortestPathAlgorithm(IEnumerable<Node> nodes, ILogger<ShortestPathAlgorithm> logger)
     {
-        private readonly IEnumerable<Node> _nodes;
-        private ShortestPathsTree _result;
+        _nodes = nodes ?? throw new ArgumentNullException(nameof(nodes));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        public ShortestPathAlgorithm(IEnumerable<Node> nodes)
+    public ShortestPaths Run(Node startNode)
+    {
+        _logger.LogDebug("Starting shortest path algorithm from node {NodeName}", startNode.Name);
+
+        _result = InitializeShortestPathTree(startNode);
+
+        var iterations = 0;
+        while (_result.TryGetShortestPathNotYetRelaxed(out var shortestNoneRelaxedPath))
         {
-            this._nodes = nodes ?? throw new ArgumentNullException(nameof(nodes));
+            _logger.LogDebug(
+                "Shortest non-relaxed path found to node {NodeName} with cost {Cost}",
+                shortestNoneRelaxedPath.EndNode.Name,
+                shortestNoneRelaxedPath.Cost
+            );
+
+            iterations++;
+            _logger.LogDebug(
+                "Iteration {Count}: relaxing node {NodeName}",
+                iterations,
+                shortestNoneRelaxedPath.EndNode.Name
+            );
+            _result = RelaxNode(shortestNoneRelaxedPath.EndNode);
         }
 
-        public ShortestPathsTree Run(Node startNode)
-        {
-            _result = InitializeShortestPathTree(startNode);
+        _result.Iterations = iterations;
 
-            var iterations = 0;
-            while (_result.TryGetShortestPathNotYetRelaxed(out Path shortestNoneRelaxedPath))
+        _logger.LogDebug("Algorithm completed in {Iterations} iterations", iterations);
+
+        return _result;
+    }
+
+    /// <summary>
+    /// Initialize a list of node edges and cost,
+    /// connecting the start node to all other nodes.
+    /// </summary>
+    private ShortestPaths InitializeShortestPathTree(Node startNode)
+    {
+        var paths = _nodes
+            .Select(n =>
             {
-                _result = RelaxNode(shortestNoneRelaxedPath.EndNode);
-                iterations++;
-            }
+                var cost = startNode.GetConnectionCost(n);
+                var endpoint = new Edge(n, cost);
+                return new Path(startNode, endpoint);
+            })
+            .ToList();
 
-            return _result;
-        }
+        return new ShortestPaths { StartNode = startNode, Paths = paths };
+    }
 
-        /// <summary>
-        /// Initialize a list of node connections and cost,
-        /// connecting the start node to all other nodes.
-        /// </summary>
-        /// <param name="startNode"></param>
-        /// <returns></returns>
-        private ShortestPathsTree InitializeShortestPathTree(Node startNode)
+    /// <summary>
+    /// Relaxes a node by examining all its outgoing edges and updating the shortest
+    /// paths to neighboring nodes if a shorter path is found through this node.
+    /// After processing all edges, marks the node as relaxed (finalized).
+    /// </summary>
+    private ShortestPaths RelaxNode(Node node)
+    {
+        foreach (var edge in node.ConnectedEdges)
         {
-            var all = _nodes
-                .Select(n =>
-                {
-                    var cost = startNode.GetConnectionCost(n);
-                    var endpoint = new Connection(n, cost);
+            _logger.LogDebug(
+                "Examining edge from {FromNode} to {ToNode} with cost {Cost}",
+                node.Name,
+                edge.Node.Name,
+                edge.Cost
+            );
 
-                    return new Path(startNode, endpoint);
-                })
-                .ToList();
-
-            return new ShortestPathsTree { StartNode = startNode, Paths = all };
+            RelaxResult(_result, node, edge);
         }
 
-        private ShortestPathsTree RelaxNode(Node selectedNode)
+        SetPathRelaxed(node);
+
+        return _result;
+    }
+
+    /// <summary>
+    /// Marks the path to the specified node as relaxed (finalized), indicating
+    /// that the shortest path to this node has been determined and will not change.
+    /// </summary>
+    private void SetPathRelaxed(Node selectedNode)
+    {
+        _result.Paths.Single(r => r.EndNode == selectedNode).Relax();
+    }
+
+    /// <summary>
+    /// Checks if going through the 'from' node to reach the 'to' edge's destination
+    /// is cheaper than the current known path. If so, updates the path with the
+    /// new shorter route and lower cost.
+    /// </summary>
+    private ShortestPaths RelaxResult(ShortestPaths result, Node from, Edge to)
+    {
+        var pathToTo = result.Paths.Single(r => r.EndNode == to.Node);
+        var pathToFrom = result.Paths.Single(r => r.EndNode == from);
+
+        var currentPathCost = pathToTo.Cost;
+        var costWithAdditionalNode = pathToFrom.Cost.Add(to.Cost);
+
+        if (currentPathCost > costWithAdditionalNode)
         {
-            SetPathRelaxed(selectedNode);
-
-            foreach (var connection in selectedNode.ConnectingNodes)
-            {
-                RelaxResult(_result, selectedNode, connection);
-            }
-
-            return _result;
+            _logger.LogDebug(
+                "Found shorter path to {Node}: {OldCost} -> {NewCost}",
+                to.Node.Name,
+                currentPathCost,
+                costWithAdditionalNode
+            );
+            pathToTo.Relax(pathToFrom, to);
         }
 
-        private void SetPathRelaxed(Node selectedNode)
-        {
-            _result.Paths.Single(r => r.EndNode == selectedNode).Relax();
-        }
-
-        private ShortestPathsTree RelaxResult(ShortestPathsTree result,
-            Node from, Connection to)
-        {
-            var pathToEndPoint = result.Paths.Single(r => r.EndNode == to.Node);
-            var pathToFrom = result.Paths.Single(r => r.EndNode == from);
-
-            var currentPathCost = pathToEndPoint.Cost;
-            var costWithAdditionalNode = pathToFrom.Cost.Add(to.Cost);
-
-            if (currentPathCost > costWithAdditionalNode)
-            {
-                pathToEndPoint.Relax(pathToFrom, to);
-            }
-
-            return result;
-        }
+        return result;
     }
 }

@@ -1,25 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿namespace DijkstraAlgorithm;
 
-namespace DijkstraAlgorithm
+public static class LinqExtensions
 {
-    public static class LinqExtentions
+    public static T? MinOrDefault<T>(this IEnumerable<T> sequence)
     {
-        public static T MinOrDefault<T>(this IEnumerable<T> sequence)
-        {
-            if (sequence.Any())
-            {
-                return sequence.Min();
-            }
-            else
-            {
-                return default(T);
-            }
-        }
+        return sequence.Any() ? sequence.Min() : default;
+    }
 
-        public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
-        {
-            return enumerable?.Any() != true;
-        }
+    public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
+    {
+        return enumerable?.Any() != true;
     }
 }
